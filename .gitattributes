@@ -1,0 +1,6 @@
+* text=auto
+
+# 安装脚本的行尾很重要：install.sh 必须是 LF（CRLF 会让 shebang 失效），
+# install.ps1 用 CRLF 更贴合 Windows 习惯。
+*.sh  text eol=lf
+*.ps1 text eol=crlf

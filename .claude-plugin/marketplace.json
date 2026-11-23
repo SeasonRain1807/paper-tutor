@@ -1,0 +1,29 @@
+{
+  "name": "paper-tutor",
+  "owner": {
+    "name": "SeasonRain1807",
+    "url": "https://github.com/SeasonRain1807"
+  },
+  "description": "paper-tutor 的 Claude Code 插件市场：一条命令装上「文献精读」skill。",
+  "plugins": [
+    {
+      "name": "paper-tutor",
+      "source": "./",
+      "displayName": "paper-tutor · 文献精读",
+      "description": "把一篇论文读成可追溯的证据：一页结论卡 + 精读笔记 + 逐段对照的精读阅读页，然后陪你做用户问答与 Agent 问答。",
+      "version": "1.0.0",
+      "category": "research",
+      "tags": [
+        "paper",
+        "reading",
+        "research",
+        "literature-review",
+        "notes"
+      ],
+      "author": {
+        "name": "SeasonRain1807",
+        "url": "https://github.com/SeasonRain1807"
+      }
+    }
+  ]
+}

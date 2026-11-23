@@ -1,0 +1,54 @@
+# ===== Python 运行产物 =====
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ===== 本机 / 编辑器 / 系统杂项 =====
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.log
+
+# ===== 临时文件（校验与截图过程产物）=====
+.tmp*
+*.tmp
+*.bak
+*.orig
+*.rej
+build/
+dist/
+node_modules/
+
+# ===== DSH 本地运行时数据（不属于 skill 本体）=====
+.dsh/sessions/
+.dsh/storages/
+.dsh/cache/
+.dsh/logs/
+.dsh/tmp/
+
+# ===== paper-tutor 运行产物与本地依赖（不进仓库）=====
+notes/
+sci-reading-output/
+paper-tutor-output/
+.pylibs/
+rawfigs/
+*.pdf
+*.docx
+*.jp2
+demo.html
+
+# ===== 各宿主的 skill 安装位（install.ps1 / install.sh 生成的链接或副本）=====
+.dsh/skills/paper-tutor/
+.claude/skills/paper-tutor/
+.codex/skills/paper-tutor/
+.agents/skills/paper-tutor/

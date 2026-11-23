@@ -1,0 +1,414 @@
+{
+  "meta": {
+    "title_en": "Paragraph-Level Scaffolding: A Reading Interface for Argument Structure",
+    "title_zh": "段落级脚手架：一种面向论证结构的阅读界面",
+    "authors": "Demo Author (Example University)",
+    "venue": "Demo Workshop on Reading Interfaces",
+    "year": 2026,
+    "doi_or_url": "",
+    "one_line": "论文主张：论文的论证分布在全文中段，因此阅读支持应以段落而非整篇文档为单位；界面把每段的原文、逐句译文与三段式注释并排对齐，试点显示读者定位主旨更快。",
+    "source_note": "演示用自撰短文（非真实发表论文），仅用于检验 paper-tutor 的提取、翻译、注释与构建流程。文中两张插图为自制演示图：Figure 1 挂在 p6、Figure 2 挂在 p9，用于检验“原图未改动”通道；图注存于 data.json 的 figures[].caption，未另设正文图注段。",
+    "argument_map": [
+      {
+        "stage": "摘要",
+        "paras": "P1",
+        "note": "问题—方案—证据—主张四步压缩，是全文的预告片。"
+      },
+      {
+        "stage": "问题",
+        "paras": "P2",
+        "note": "阅读瓶颈：产出增长快于阅读时间，于是略读成为理性选择。"
+      },
+      {
+        "stage": "缺口",
+        "paras": "P3",
+        "note": "搜索引擎、摘要系统、文献管理器都不处理论文中段。"
+      },
+      {
+        "stage": "主张",
+        "paras": "P4",
+        "note": "提出段落级脚手架：三对齐 + 注释三问，并声明是试点评估。"
+      },
+      {
+        "stage": "定位",
+        "paras": "P5",
+        "note": "与摘要、注释、论证挖掘三类工作的目标差异。"
+      },
+      {
+        "stage": "设计",
+        "paras": "P6–P8",
+        "note": "版式规格 → 注释三问 → 评分公式，逐层把主张操作化。"
+      },
+      {
+        "stage": "证据",
+        "paras": "P9–P10",
+        "note": "定位时间下降 41%，摘要更常点到证据段，但理解测验无差异。"
+      },
+      {
+        "stage": "限定与结论",
+        "paras": "P11–P12",
+        "note": "三项局限自我约束结论强度，结论回到“以段落为单位”。"
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "abstract",
+      "title_en": "Abstract",
+      "title_zh": "摘要"
+    },
+    {
+      "id": "intro",
+      "title_en": "1 Introduction",
+      "title_zh": "1 引言"
+    },
+    {
+      "id": "related",
+      "title_en": "2 Related Work",
+      "title_zh": "2 相关工作"
+    },
+    {
+      "id": "method",
+      "title_en": "3 Method",
+      "title_zh": "3 方法"
+    },
+    {
+      "id": "results",
+      "title_en": "4 Results",
+      "title_zh": "4 结果"
+    },
+    {
+      "id": "discussion",
+      "title_en": "5 Discussion",
+      "title_zh": "5 讨论与结论"
+    }
+  ],
+  "paragraphs": [
+    {
+      "id": "p1",
+      "section": "abstract",
+      "kind": "abstract",
+      "label": "问题与主张",
+      "en": "What makes scholarly reading slow is not difficult vocabulary but the way an argument is spread out: a claim introduced in the introduction is defended in Section 4 and narrowed again in Section 6. We describe a reading interface that works at the level of the paragraph and keeps three things in parallel for every paragraph of a paper: the source text exactly as written, a translation that follows the original sentence by sentence, and a brief analytical note stating what the paragraph does and where it stands in the argument. In a pilot study with twelve graduate students, participants using the interface found a paper's central claim 41% faster than participants reading the PDF, and their written summaries pointed to the evidence-bearing paragraph more frequently (63% vs. 38%). Our claim is that reading support should be organised around the paragraph rather than the whole document.",
+      "zh": "学术阅读之所以慢，主要原因不在词汇难懂，而在于论证是摊开的：引言里提出的主张，要到第四节才被辩护，到第六节又被收窄。我们描述一种以段落为单位工作的阅读界面，它为论文的每一段并行保留三样东西：完全照原样呈现的原文、逐句跟随原文的译文，以及一段简短的分析注释，说明该段在做什么、在论证中站在哪里。在一项十二名研究生参与的试点研究中，使用该界面的被试找到论文核心主张的速度比阅读 PDF 的被试快 41%，他们写下的摘要在指向承载证据的段落时也更频繁（63% 对 38%）。我们的主张是：阅读支持应当围绕段落来组织，而不是围绕整篇文档。",
+      "analysis": {
+        "summary": "摘要先指出学术阅读慢的根源是论证摊开在中段，再交代界面的三对齐结构，最后用试点数据支撑“以段落为单位”的论断。",
+        "function": "承担全文的压缩版论证：问题—方案—证据—主张四步齐全，读者读完即可建立阅读地图。",
+        "position": "位于全文最外层，是后文各节的预告：引言展开问题，方法节展开三对齐，结果节对应 41% 与 63% 这两个数字。",
+        "terms": [
+          {
+            "en": "paragraph-level scaffolding",
+            "zh": "段落级脚手架"
+          },
+          {
+            "en": "verbatim source text",
+            "zh": "逐字原文"
+          },
+          {
+            "en": "pilot study",
+            "zh": "试点研究"
+          }
+        ],
+        "questions": [
+          "“41% faster” 相对的是什么基线任务、用什么口径计时？",
+          "n = 12 的样本能支持多强的因果判断？"
+        ]
+      }
+    },
+    {
+      "id": "p2",
+      "section": "intro",
+      "kind": "body",
+      "label": "阅读瓶颈",
+      "en": "Every field runs into the same constraint: published output grows faster than the hours anyone has for reading it. To see how a paper's claims are actually put together, a reader has to go through it from first page to last, yet that is exactly the activity dropped first when a deadline appears. Most readers therefore skim: the abstract, the figures and the conclusion get read, and the middle is assumed to deliver what the abstract advertised.",
+      "zh": "每个领域都撞上同一条约束：发表产出的增长速度，快过任何人可用于阅读的小时数。要看清一篇论文的主张究竟如何拼装，读者必须从第一页读到最后一页，而这恰好是截止日期临近时最先被取消的活动。于是大多数读者选择略读：读摘要、读图、读结论，并假定中间部分兑现了摘要的承诺。",
+      "analysis": {
+        "summary": "先给出领域的共同约束：产出增长快于可支配的阅读时间；再指出通读虽必要却最先被放弃；最后落到多数人的实际做法——只读摘要、图与结论。",
+        "function": "把问题从“读得慢”改写为“读不完”，为“支持中段”提供动机。",
+        "position": "引言第一段，位于缺口（p3）之前；它定义的约束是全文要处理的靶子。",
+        "terms": [
+          {
+            "en": "bottleneck",
+            "zh": "瓶颈"
+          },
+          {
+            "en": "skim",
+            "zh": "略读"
+          }
+        ],
+        "questions": [
+          "“阅读时间”的估计有数据支撑，还是通识判断？"
+        ]
+      }
+    },
+    {
+      "id": "p3",
+      "section": "intro",
+      "kind": "body",
+      "label": "研究缺口",
+      "en": "Tools built for readers do not close this gap. Search engines hand back sentences stripped of their argumentative surroundings; summarisation systems collapse a paper into a single paragraph that conceals the steps between claim and evidence; reference managers sort PDFs without saying anything about what is inside them. What remains unaddressed is the middle of the paper, the place where the argument is actually assembled.",
+      "zh": "为读者而造的工具并没有补上这个缺口。搜索引擎交回的是被剥离了论证语境的句子；摘要系统把论文压成一段话，恰好把主张与证据之间的步骤藏了起来；文献管理器只整理 PDF，对里面的内容一言不发。始终未被处理的是论文的中段——论证真正被组装起来的地方。",
+      "analysis": {
+        "summary": "逐一清点搜索引擎、摘要系统、文献管理器三类工具，指出它们都在论文中段失效。",
+        "function": "用排除法框定缺口：不是没人做阅读工具，而是没人处理论证被组装的那一段。",
+        "position": "紧接约束之后，承上启下——把 p2 的问题转化为 p4 的设计要求。",
+        "terms": [
+          {
+            "en": "argumentative context",
+            "zh": "论证语境"
+          },
+          {
+            "en": "reference manager",
+            "zh": "文献管理器"
+          }
+        ],
+        "questions": [
+          "为什么把论证挖掘放到 p5 与相关工作一起比，而不是在这一段清点？"
+        ]
+      }
+    },
+    {
+      "id": "p4",
+      "section": "intro",
+      "kind": "body",
+      "label": "本文主张",
+      "en": "We introduce paragraph-level scaffolding, an interface that takes the paragraph as its unit of support. For every paragraph it displays the original English, a Chinese translation that tracks the source sentence by sentence, and a note in three parts: what the paragraph says, what work it performs in the argument, and where it stands in the paper. We then report a pilot evaluation with twelve graduate students, and we are explicit about what the results can and cannot establish.",
+      "zh": "我们提出段落级脚手架：一种把段落当作支持单位的界面。对每一段，它同时呈现英文原文、逐句跟随原文的中文译文，以及由三部分组成的注释——这一段说了什么、在论证中承担什么工作、在论文中处于什么位置。随后我们报告一项十二名研究生参与的试点评估，并明确说明这些结果能证明什么、不能证明什么。",
+      "analysis": {
+        "summary": "正式提出段落级脚手架，逐项交代每段的原文、译文与三段式注释，并声明本文做的是试点评估。",
+        "function": "把前文的缺口转成可操作的设计主张，同时管理预期：这是试点，不是定论。",
+        "position": "引言的收束段，也是全文主张的第一次完整表述；后面三节都是它的展开。",
+        "terms": [
+          {
+            "en": "three-part note",
+            "zh": "三段式注释"
+          },
+          {
+            "en": "pilot evaluation",
+            "zh": "试点评估"
+          }
+        ],
+        "questions": [
+          "为什么注释限定为三问，而不是更多维度？"
+        ]
+      }
+    },
+    {
+      "id": "p5",
+      "section": "related",
+      "kind": "body",
+      "label": "三类工作的定位",
+      "en": "Research on scholarly reading divides into three strands. Summarisation work measures compression, typically with ROUGE against reference summaries, and so rewards fluent output over argumentative fidelity. Annotation tools give readers highlights and comments, but the interpretive work stays with the reader. Argument mining recovers claims and premises automatically, producing a structure with no reading surface attached. Our interface draws on all three while optimising for something else: it holds the reader's attention on the argument and takes away the labour of translation and orientation.",
+      "zh": "关于学术阅读的研究可分为三支。摘要研究衡量的是压缩效果，通常用 ROUGE 比对参考摘要，因而奖励的是通顺，而不是论证上的忠实。标注工具让读者高亮与批注，但解释的负担仍留在读者身上。论证挖掘自动抽取主张与前提，得到的是一个结构，却没有配套的阅读界面。我们的界面从三者都有借鉴，但优化的目标不同：让读者的注意力留在论证上，同时省去翻译与定位的成本。",
+      "analysis": {
+        "summary": "把相关工作分成摘要、标注、论证挖掘三支，逐一说明各自的优化目标与本界面不同。",
+        "function": "划清与既有工作的边界：不是做更好的摘要或更强的抽取，而是把注意力留在论证上、省掉翻译与定位成本。",
+        "position": "文献综述的唯一一段，承接 p3 的缺口，为 p4 的设计定位。",
+        "terms": [
+          {
+            "en": "ROUGE",
+            "zh": "ROUGE 指标"
+          },
+          {
+            "en": "argument mining",
+            "zh": "论证挖掘"
+          },
+          {
+            "en": "reading surface",
+            "zh": "阅读界面"
+          }
+        ],
+        "questions": [
+          "“borrows from all three” 具体借了哪一部分？"
+        ]
+      }
+    },
+    {
+      "id": "p6",
+      "section": "method",
+      "kind": "body",
+      "label": "版式规格",
+      "en": "The prototype is one page on which each paragraph gets a two-column card. The left column is divided horizontally: the paragraph as published sits on top, its translation directly beneath it. The right column carries the analytical note. Because all three panels cover the same stretch of text, the reader never has to guess which note belongs to which sentence; the correspondence is positional rather than hyperlinked.",
+      "zh": "原型是一个单页界面，每一段对应一张双栏卡片。左栏上下分割：上方是照原样排布的该段原文，下方紧接其译文。右栏承载分析注释。由于三个面板覆盖的是同一段文字，读者无须猜哪条注释对应哪一句；对应关系靠位置建立，而不是靠超链接。",
+      "analysis": {
+        "summary": "描述界面版式：每段一张双栏卡片，左栏上原文、下译文，右栏注释；对齐靠位置而非链接。",
+        "function": "把“三对齐”落成可见的版式规格，回答“凭什么不点链接也能知道对应关系”。",
+        "position": "方法节第一段，是 p4 三对齐的第一层操作化（版式）；p7 接着操作化注释。",
+        "terms": [
+          {
+            "en": "two-column card",
+            "zh": "双栏卡片"
+          },
+          {
+            "en": "positional alignment",
+            "zh": "位置对齐"
+          }
+        ],
+        "questions": [
+          "段落长到一整页（如综述）时，位置对齐还成立吗？"
+        ]
+      },
+      "figures": [
+        {
+          "path": "figures/fig1-layout.png",
+          "label": "Figure 1",
+          "caption": "One card per paragraph: left column holds source above translation, right column the note.",
+          "alt": "段落卡片版式示意图：左栏上半为英文原文、下半为中文译文，右栏为分析注释",
+          "source": "示例论文 Figure 1（自制演示图）",
+          "sha256": "b781d2d83dc3be32d0f200702e6990005d7e18d9009e8d8cbb16cb04830b5c7f",
+          "bytes": 143850
+        }
+      ]
+    },
+    {
+      "id": "p7",
+      "section": "method",
+      "kind": "body",
+      "label": "注释三问",
+      "en": "Every note answers three questions, always in the same order. The first asks what the paragraph says and receives a one-sentence paraphrase that may not add information absent from the source. The second asks what work the paragraph performs and names its function in the argument — stating a gap, defining a construct, reporting a result. The third asks where the paragraph stands, placing it among its neighbours and relative to the paper's main claim. Holding the three apart guards against the familiar failure in which a summary quietly merges description with evaluation.",
+      "zh": "每条注释都回答三个问题，且顺序固定。第一问是这一段说了什么，答案必须是一句转述，且不得加入原文没有的信息。第二问是这一段承担什么工作，要说出它在论证中的功能——指出缺口、定义构念、报告结果。第三问是这一段处于什么位置，把它放进相邻段落之间、并相对于论文主旨来定位。把三者分开，是为了防住一种常见失误：摘要悄悄把描述与评价混成了同一件事。",
+      "analysis": {
+        "summary": "规定注释固定回答三问：说了什么（一句转述，不得添加原文没有的信息）、做什么用（命名论证功能）、处在哪（相对相邻段与主旨）。",
+        "function": "给出注释的生成规范，并解释三问为何必须分开——防止描述吞掉评价。",
+        "position": "方法节中段，承 p6 的版式，启 p8 的评分：三问正是评分的三个维度。",
+        "terms": [
+          {
+            "en": "paraphrase",
+            "zh": "转述"
+          },
+          {
+            "en": "function in the argument",
+            "zh": "论证功能"
+          }
+        ],
+        "questions": [
+          "“不得加入原文没有的信息”在操作上如何检验？"
+        ]
+      }
+    },
+    {
+      "id": "p8",
+      "section": "method",
+      "kind": "equation",
+      "label": "评分公式",
+      "en": "An annotation a receives the score S(a) = w1·C(a) + w2·F(a) + w3·P(a), with w1 + w2 + w3 = 1, where C, F and P measure how completely the note covers content, function and position; in the pilot we set w = (0.35, 0.30, 0.35).",
+      "zh": "一条注释 a 的得分记为 S(a) = w1·C(a) + w2·F(a) + w3·P(a)，其中 w1、w2、w3 为三项权重且满足 w1 + w2 + w3 = 1。C、F、P 分别度量这条注释对段落内容、对论证功能、对位置信息的覆盖是否完整：内容说漏、功能点偏、位置放错，都会直接拉低总分；试点中我们取 w = (0.35, 0.30, 0.35)。",
+      "analysis": {
+        "summary": "给出注释评分函数：三项加权求和，分别度量内容、功能、位置的覆盖度，试点权重为 (0.35, 0.30, 0.35)。",
+        "function": "把注释质量变成可计算的量，使“注释好不好”可以比较。",
+        "position": "方法节末段，是 p7 三问的量化形式；结果节用它的口径解释注释质量。",
+        "terms": [
+          {
+            "en": "coverage",
+            "zh": "覆盖度"
+          }
+        ],
+        "questions": [
+          "权重为什么这样设？做过敏感性分析吗？"
+        ]
+      }
+    },
+    {
+      "id": "p9",
+      "section": "results",
+      "kind": "body",
+      "label": "试点结果",
+      "en": "Twelve graduate students read the same paper under one of two conditions, the PDF or the interface. Time to locate the paper's main claim fell from a median of 6.4 minutes to 3.8 minutes, a 41% reduction. Asked for a five-sentence summary, participants in the interface condition pointed to the paragraph holding the key evidence more often (63% versus 38%). Comprehension quiz scores did not differ between conditions, which we read as evidence that the interface speeds orientation rather than deepening understanding.",
+      "zh": "十二名研究生在两种条件之一阅读同一篇论文：PDF，或该界面。定位论文主旨所需时间从 6.4 分钟的中位数降到 3.8 分钟，减少 41%。在被要求写五句话摘要时，界面条件下的被试更常点到承载关键证据的那一段（63% 对 38%）。理解测验得分在两种条件间没有差异，我们据此认为，该界面加速的是定向，而不是加深理解。",
+      "analysis": {
+        "summary": "报告试点结果：12 名研究生两条件对比，定位主旨中位数 6.4→3.8 分钟（−41%），摘要点名证据段 63% vs 38%，理解测验无差异。",
+        "function": "提供主结果，并用“无差异”限定结论——界面加速定向，未必加深理解。",
+        "position": "结果节主体，对应 p1 预告的两个数字；p10 用表 1 补齐口径。",
+        "terms": [
+          {
+            "en": "median",
+            "zh": "中位数"
+          },
+          {
+            "en": "comprehension quiz",
+            "zh": "理解测验"
+          }
+        ],
+        "questions": [
+          "10 题的理解测验是否太短，压住了可能存在的差异？"
+        ]
+      },
+      "figures": [
+        {
+          "path": "figures/fig2-time.png",
+          "label": "Figure 2",
+          "caption": "Time to locate the main claim, by condition (pilot study).",
+          "alt": "柱状图：PDF 条件定位主旨中位数 6.4 分钟，阅读界面条件 3.8 分钟，相差 41%",
+          "source": "示例论文 Figure 2（自制演示图）",
+          "sha256": "ddd880e43288d35a15d99df59af726e263a3d67a4c6c74459accd9457574f6a1",
+          "bytes": 47054
+        }
+      ]
+    },
+    {
+      "id": "p10",
+      "section": "results",
+      "kind": "caption",
+      "label": "表 1 说明",
+      "en": "Table 1: Pilot results (n = 12). Time is reported as medians, summary content as proportions. The comprehension quiz contained ten items and did not separate the two conditions.",
+      "zh": "表 1：试点结果（n = 12）。时间报中位数，摘要内容报比例。理解测验共 10 题，未能区分两种条件。",
+      "analysis": {
+        "summary": "表 1 的说明：n=12，时间报中位数、摘要内容报比例，理解测验 10 题且未区分两条件。",
+        "function": "给主结果补上样本量与统计口径，让读者知道这些数字该按什么读法理解，而不只是看到“更快”这一个结论。",
+        "position": "位于结果节末尾，是对 p9 的数据说明与口径补充，本身不引入新的实证发现。",
+        "terms": [],
+        "questions": [
+          "为什么不用均值与置信区间？"
+        ]
+      }
+    },
+    {
+      "id": "p11",
+      "section": "discussion",
+      "kind": "body",
+      "label": "局限",
+      "en": "Three limitations bound these results. The sample is small and comes from a single department, so the effect sizes are suggestive at best. Translations and notes were written by the first author, mixing interface design with annotation quality in a way we cannot separate. And we measured orientation rather than retention: it remains unknown whether readers who start faster also remember more a week later.",
+      "zh": "三项局限约束着这些结果。样本量小，且来自单一院系，因此效应量最多只能算提示性的。译文与注释均由第一作者撰写，把界面设计与注释质量混在一起，我们无法把两者分开。并且我们测的是定向而非保持：起步更快的读者一周后是否记得更多，仍然未知。",
+      "analysis": {
+        "summary": "三条局限：样本小且单一院系、注释与译文由第一作者产出（设计与质量混淆）、只测定向不测保持。",
+        "function": "自我约束结论强度，把结论从“界面有效”收窄为“在此试点下定向更快”。",
+        "position": "讨论节前段，紧接 p9/p10 的证据，为 p12 的结论降调。",
+        "terms": [
+          {
+            "en": "confound",
+            "zh": "混淆因素"
+          },
+          {
+            "en": "retention",
+            "zh": "保持"
+          }
+        ],
+        "questions": [
+          "有没有独立评分注释质量，以剥离这个混淆？"
+        ]
+      }
+    },
+    {
+      "id": "p12",
+      "section": "discussion",
+      "kind": "body",
+      "label": "结论",
+      "en": "Reading support belongs at the paragraph, since that is where claims, evidence and qualification come together. An interface that aligns source, translation and analysis at this granularity shows the argument as it is instead of paraphrasing it away. What comes next is testing whether the scaffolding transfers to readers in other fields, and whether its output can be generated well enough to do without an expert in the loop.",
+      "zh": "阅读支持应当落在段落这一层，因为主张、证据与限定正是在段落处汇合。一个在这一粒度上对齐原文、译文与分析的界面，呈现的是论证本身，而不是把它转述掉。接下来的问题是：这套脚手架能否迁移到其他领域的读者身上，以及它的产出能否好到不再需要专家介入。",
+      "analysis": {
+        "summary": "结论：阅读支持应以段落为单位，因为主张、证据与限定在段落处汇合；下一步是跨领域验证与降低生成对专家的依赖。",
+        "function": "回到全文主张并给出后续路线，闭合 p4 的承诺。",
+        "position": "全文最后一段，回应 p1 关于“阅读支持单位”的论断。",
+        "terms": [
+          {
+            "en": "expert in the loop",
+            "zh": "专家介入"
+          }
+        ],
+        "questions": [
+          "跨领域迁移的最大障碍会是术语，还是论证习惯？"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+Paragraph-Level Scaffolding: A Reading Interface for Argument Structure
+
+Demo Author (Example University)
+
+Abstract
+
+What makes scholarly reading slow is not difficult vocabulary but the way an argument is spread out: a claim introduced in the introduction is defended in Section 4 and narrowed again in Section 6. We describe a reading interface that works at the level of the paragraph and keeps three things in parallel for every paragraph of a paper: the source text exactly as written, a translation that follows the original sentence by sentence, and a brief analytical note stating what the paragraph does and where it stands in the argument. In a pilot study with twelve graduate students, participants using the interface found a paper's central claim 41% faster than participants reading the PDF, and their written summaries pointed to the evidence-bearing paragraph more frequently (63% vs. 38%). Our claim is that reading support should be organised around the paragraph rather than the whole document.
+
+1 Introduction
+
+Every field runs into the same constraint: published output grows faster than the hours anyone has for reading it. To see how a paper's claims are actually put together, a reader has to go through it from first page to last, yet that is exactly the activity dropped first when a deadline appears. Most readers therefore skim: the abstract, the figures and the conclusion get read, and the middle is assumed to deliver what the abstract advertised.
+
+Tools built for readers do not close this gap. Search engines hand back sentences stripped of their argumentative surroundings; summarisation systems collapse a paper into a single paragraph that conceals the steps between claim and evidence; reference managers sort PDFs without saying anything about what is inside them. What remains unaddressed is the middle of the paper, the place where the argument is actually assembled.
+
+We introduce paragraph-level scaffolding, an interface that takes the paragraph as its unit of support. For every paragraph it displays the original English, a Chinese translation that tracks the source sentence by sentence, and a note in three parts: what the paragraph says, what work it performs in the argument, and where it stands in the paper. We then report a pilot evaluation with twelve graduate students, and we are explicit about what the results can and cannot establish.
+
+2 Related Work
+
+Research on scholarly reading divides into three strands. Summarisation work measures compression, typically with ROUGE against reference summaries, and so rewards fluent output over argumentative fidelity. Annotation tools give readers highlights and comments, but the interpretive work stays with the reader. Argument mining recovers claims and premises automatically, producing a structure with no reading surface attached. Our interface draws on all three while optimising for something else: it holds the reader's attention on the argument and takes away the labour of translation and orientation.
+
+3 Method
+
+The prototype is one page on which each paragraph gets a two-column card. The left column is divided horizontally: the paragraph as published sits on top, its translation directly beneath it. The right column carries the analytical note. Because all three panels cover the same stretch of text, the reader never has to guess which note belongs to which sentence; the correspondence is positional rather than hyperlinked.
+
+Every note answers three questions, always in the same order. The first asks what the paragraph says and receives a one-sentence paraphrase that may not add information absent from the source. The second asks what work the paragraph performs and names its function in the argument — stating a gap, defining a construct, reporting a result. The third asks where the paragraph stands, placing it among its neighbours and relative to the paper's main claim. Holding the three apart guards against the familiar failure in which a summary quietly merges description with evaluation.
+
+An annotation a receives the score S(a) = w1·C(a) + w2·F(a) + w3·P(a), with w1 + w2 + w3 = 1, where C, F and P measure how completely the note covers content, function and position; in the pilot we set w = (0.35, 0.30, 0.35).
+
+4 Results
+
+Twelve graduate students read the same paper under one of two conditions, the PDF or the interface. Time to locate the paper's main claim fell from a median of 6.4 minutes to 3.8 minutes, a 41% reduction. Asked for a five-sentence summary, participants in the interface condition pointed to the paragraph holding the key evidence more often (63% versus 38%). Comprehension quiz scores did not differ between conditions, which we read as evidence that the interface speeds orientation rather than deepening understanding.
+
+Table 1: Pilot results (n = 12). Time is reported as medians, summary content as proportions. The comprehension quiz contained ten items and did not separate the two conditions.
+
+5 Discussion
+
+Three limitations bound these results. The sample is small and comes from a single department, so the effect sizes are suggestive at best. Translations and notes were written by the first author, mixing interface design with annotation quality in a way we cannot separate. And we measured orientation rather than retention: it remains unknown whether readers who start faster also remember more a week later.
+
+Reading support belongs at the paragraph, since that is where claims, evidence and qualification come together. An interface that aligns source, translation and analysis at this granularity shows the argument as it is instead of paraphrasing it away. What comes next is testing whether the scaffolding transfers to readers in other fields, and whether its output can be generated well enough to do without an expert in the loop.
