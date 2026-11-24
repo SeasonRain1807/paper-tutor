@@ -8,6 +8,8 @@
 
 配套的红线只有一句：**图片以原始字节呈现，不裁剪、不重压缩、不转格式、不叠标注**。
 
+配套的形状要求也只有一句：**一个图号 = 一张完整图 = 一条完整图注**。PDF 排版常把一张图拆成上下若干条位图带，交付时必须拼回整张，(a)(b) 两个子图留在同一张图、同一条图注里。
+
 ---
 
 ## 1. 什么时候必须挂图
@@ -65,10 +67,32 @@ Get-ChildItem "$env:TEMP\paper_docx\word\media"
 
 ### 2.4 PDF
 
-PDF 里的图是嵌在位图或矢量对象里的，本机没有可靠的位图导出工具（见 `references/01-source-extraction.md` 的工具现状）。两条路：
+PDF 是这类任务最常见的来源，也是最容易出事的来源：排版软件经常把一张图拆成上下多条位图带（(a)(b) 两个子图各占一条），直接按对象导出就会拿到“拦腰切断”的半张图；图注也会被拆成 `Fig. 5(a) …` 与 `Fig. 5(b) …` 两段。用 `scripts/figures.py` 一次做完“认图 → 拼回整张 → 配图注”：
 
-- `pypdf` 能列出页面上的图片对象并导出（`page.images`），导出的是 PDF 内嵌的原始位图，可用；但矢量图（大多数折线图、示意图）导不出来。
-- 导不出来时，**不要用截图冒充原图**：该段不挂 `figures`，在 `analysis.caveat` 写"图 X 未能取到原图，需对照原文查看"，并在交付说明里点出来。
+```powershell
+python "<skill_dir>/scripts/figures.py" probe --pdf "<论文>.pdf" --pages 2 --json      # 先看它认出什么
+python "<skill_dir>/scripts/figures.py" extract --pdf "<论文>.pdf" --out "<论文短名>/figures" --manifest
+```
+
+`probe` 打印每张图的区域、配到的图注，以及它是怎么来的：
+
+| `composed` | 含义 |
+|---|---|
+| `single` | 页面上只有一块位图，按原始字节导出 |
+| `stitch` | 由同一张图的若干条带上下（或左右）无缝拼回，逐像素拷贝，不缩放、不重采样 |
+| `render` | 分带拼不成行列（罕见），按页内区域渲染一次；完整但不是原字节，`note` 里写明 |
+| `unresolved` | 认出了图但没认全，退出码 3，必须人工看图后再决定挂不挂 |
+
+`extract` 写出 `figN.<原扩展名>` 与 `figures/_manifest.json`（每张图的 rect、分带、像素尺寸、`sha256`、整条图注）。manifest 里的 `caption` 就是**整条图注**，含 (a)(b)，直接抄进 `figures[].caption`。
+
+铁律：
+
+- **不要按页截图，也不要把 (a)(b) 分开登记**。一个图号一条 `figures[]`：图是完整的，`caption` 也是完整的。
+- `label` 只写 `Fig. 5`，不写 `Fig. 5(a)`；子图说明留在 `caption` 里。
+- `composed: stitch` 的成品是**无损合成件**（每个像素都来自 PDF 内嵌位图，未重采样），不违反第 4 节；`note` 会写明“由 N 个分带拼接”。
+- `probe` 配错图注时要先确认再交付（两栏排版里，题注与上一张图只隔零点几 pt 是常见的坑）；脚本已按“题注在图下方”优先于“距离最近”来配，但图注被标点或版式污染时仍可能出错。
+- 页面里是矢量图（`page.get_drawings()` 有内容但没位图）时 `probe` 会警告，本脚本不处理这类图，按 2.5 处理并写进 `caveat`。
+- 取不到原图时，**不要用截图冒充原图**：该段不挂 `figures`，在 `analysis.caveat` 写“图 X 未能取到原图，需对照原文查看”，并在交付说明里点出来。
 
 ### 2.5 只有扫描件 / 截图
 
@@ -156,6 +180,11 @@ python "<skill_dir>/scripts/check.py" "<论文短名>/data.json" --source "<论�
 | `figure-unlabeled` | 既无 `label` 也无 `caption` | 补 `label: "Figure 3"` 或一句 `caption` |
 | `figure-outside` | 图在 `data.json` 目录之外 | 复制进 `figures/`，避免交付时丢图 |
 | `figure-unused` | `figures/` 里有没被引用的图 | 挂到对应段落，或删除，免得交付一堆无用文件 |
+| `figure-split` | 同一个图号在多个段落里各挂了一次 | 合并成一条 `figures[]`，挂在第一次详细展开的那段 |
+| `figure-panel-label` | `label` 写成 `Fig. 5(a)` 这类子图号 | `label` 只写 `Fig. 5`，`caption` 写整条图注 |
+| `figure-band` | 文件尺寸正好等于某张完整图其中一条分带的像素尺寸 | 就是“拦腰切断”的那半张：用 `figures.py extract` 重取整张 |
+| `figure-caption-truncated` | `caption` 只是 `figures/_manifest.json` 里整条图注的前缀 | 抄 manifest 的 `caption`，把 (a)(b) 补齐 |
+| `figure-label-mismatch` | `label` 的图号与 `caption` 开头的图号不一致 | 核对图注归属，改对图号 |
 
 `check.py` 的总体输出里有一行 `图片：N/M 张已按记录字节核验（sha256）`。`N < M` 说明有图没通过核验，别只看"0 error"就交付——先确认每一张都记过哈希。
 
@@ -164,6 +193,7 @@ python "<skill_dir>/scripts/check.py" "<论文短名>/data.json" --source "<论�
 ## 7. 交付前清单
 
 - [ ] 每张被正文讲到的图都挂到了正确段落（不是页数最近的那段）
+- [ ] 每张图都是完整的一张：(a)(b) 在同一个文件里，图注也是整条（`label` 里没有 `(a)` / `(b)`）
 - [ ] `figures/` 里没有未引用的图片，`path` 都在 `data.json` 目录内
 - [ ] `check.py` 输出 `图片：M/M`，且 0 error
 - [ ] `--figure-mode link` 构建时，`figures/` 与 HTML 一起交付，并在说明里点明

@@ -52,3 +52,34 @@ demo.html
 .claude/skills/paper-tutor/
 .codex/skills/paper-tutor/
 .agents/skills/paper-tutor/
+
+# ===== 凭据与本机导出物（任何情况下都不该进仓库）=====
+.env
+.env.*
+!.env.example
+.netrc
+.credentials*
+*.pem
+*.key
+*.pfx
+*.p12
+
+# ===== 测试 / 覆盖率 / Notebook 缓存 =====
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.eggs/
+*.egg-info/
+.ipynb_checkpoints/
+
+# ===== 在仓库根直接跑 skill 时的临时产物（只作用于仓库根）=====
+/figures/
+/out/
+~$*
+
+# ===== 编辑器 / 宿主本地配置 =====
+.claude/settings.local.json
+*.code-workspace
+.history/

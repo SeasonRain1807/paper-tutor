@@ -182,7 +182,7 @@ python "<skill_dir>/scripts/validate_output.py" "<notes_dir>/<论文短标题>"
 2. **译文逐句对应**：英文每一句都要有对应中文；不省略从句，不合并句子，不添加原文没有的信息或评价。语序可按中文习惯重组，因果、让步、条件、否定等逻辑关系不得改变。
 3. **每段都有注释**：注释必须回答三件事——这段讲了什么、起什么作用、在全文论证结构中处于什么位置。不许用空话或复述译文充数。
 4. **段落完整**：正文每一段都要有一张卡片；缺段、并段、跳段都算失败，由 `check.py` 拦截。
-5. **原图不得改动**：段落叙述到某张图时，把那张图的原始文件放上去——不裁剪、不缩放重存、不转格式、不叠箭头或文字。`check.py` 用 `sha256` 逐字节核验，改过就报 `figure-hash` 错误。
+5. **原图不得改动，而且必须完整**：段落叙述到某张图时，把那张图的原始文件放上去——不裁剪、不缩放重存、不转格式、不叠箭头或文字。**一个图号 = 一张完整图 = 一条完整图注**：图在 PDF 里常被排版拆成上下若干条位图带（(a)(b) 两个子图各占一条），必须先按原像素拼回整张再挂；图注写整条，不得拆成 `Fig. 5(a)` / `Fig. 5(b)` 两个图号、两张图、两段文字。`check.py` 用 `sha256` 逐字节核验，改过就报 `figure-hash`；被拦腰切断的图报 `figure-band`，图注只剩原文前缀的报 `figure-caption-truncated`。
 
 ### Step 11｜提取正文，建立逐字基准
 
@@ -209,12 +209,20 @@ python "<skill_dir>/scripts/extract.py" --url "https://arxiv.org/html/2401.00001
 
 逐段判断：这段文字有没有在描述/引用某张图（“Figure 3 shows…”、“as the curve in Fig. 2 indicates”、或解释图里的趋势、对比、结构）。有，就把那张图的**原始文件**放进 `figures/`，在该段的 `figures` 数组里登记来源与说明，一个字改图都不行：
 
+- **PDF（最常见，也最容易出事）**：用 `scripts/figures.py` 取图，不要手工按页截图，也不要只导出其中一条位图带。
+
+  ```powershell
+  python "<skill_dir>/scripts/figures.py" probe --pdf "<论文>.pdf" --pages 2 --json
+  python "<skill_dir>/scripts/figures.py" extract --pdf "<论文>.pdf" --out "<论文短名>/figures" --manifest
+  ```
+
+  `probe` 先告诉你它认出几张图、每张由几块分带拼成（`composed` 取 `single` / `stitch` / `render` / `unresolved`）、各自配上哪条图注；`extract` 写出图片与 `figures/_manifest.json`（像素尺寸、分带、`sha256`、**整条**图注）。manifest 里的 `caption` 抄进 `figures[].caption`，`label` 只写 `Fig. 5`。
 - 用户提供了图片文件 → 直接复制进 `figures/`，保留文件名与字节。
 - arXiv / 出版社 HTML → 下载页面里该图的原始图片资源（`<img src>` 或 figure 链接），不要截图、不要另存为降质版。
 - `.docx` → 从压缩包的 `word/media/` 里取原图。
-- 只能截图 / 只能看到 PDF 位图 → 记入 `analysis.caveat` 并在注释里说明，不要伪造“原图”。
+- PDF 里是矢量图（`probe` 警告“没有位图，但有矢量绘图”），或某张图 `composed` 为 `render` / `unresolved` → 记入 `analysis.caveat` 并在注释里说明；不要截图充数，更不要只挂半张图。
 
-登记后跑一次 `--write-figure-hashes` 把字节指纹写进 `data.json`，此后每次校验都会逐字节比对。取图方式与判断标准见 `references/07-figures.md`。
+一张图只登记一条 `figures[]`：图是完整的（(a)(b) 在同一个文件里），`caption` 也是完整的整条图注。登记后跑一次 `--write-figure-hashes` 把字节指纹写进 `data.json`，此后每次校验都会逐字节比对。取图方式与判断标准见 `references/07-figures.md`。
 
 ### Step 16｜组装 data.json 并构建
 
@@ -367,7 +375,7 @@ python "<skill_dir>/scripts/check.py" --data "<论文短名>/data.json" --source
 - 可用时使用 Docling 增强复杂 PDF、扫描件、公式、表格和版面定位；它不是运行本 Skill 的前提。
 - PaperQA2 仅在用户明确启用且运行环境已配置时用于大规模/多论文证据检索；单篇论文默认不依赖它。
 - 无法读取全文时，可做摘要级讨论，但必须标记为“非全文 Agent 问答”，禁止声称已核对图表、页码或补充材料。
-- Python 脚本依赖标准库；HTML 提取需要 `lxml`，PDF 提取需要 `pypdf` 或 `pdftotext`，DOCX 提取需要 `python-docx`。缺依赖时脚本会明确报错，不要改用猜测式提取。
+- Python 脚本依赖标准库；HTML 提取需要 `lxml`，PDF 提取需要 `pypdf` 或 `pdftotext`，DOCX 提取需要 `python-docx`。PDF **取原图**需要 PyMuPDF 与 Pillow（`pip install "pymupdf>=1.24,<2" pillow`），`figures.py` 会先检查再动手。缺依赖时脚本会明确报错，不要改用猜测式提取。
 
 ### 3_精读阅读页.html 生成失败时
 
@@ -379,6 +387,8 @@ python "<skill_dir>/scripts/check.py" --data "<论文短名>/data.json" --source
 | 图表内容不在文本层 | 在对应段 `analysis.caveat` 注明“图 X 内容需对照原文查看”，不编造图内数据 |
 | 提取后段落数明显异常（如整篇 1 段） | 换提取方式，或手工按空行重建 `source.txt` |
 | 拿不到某张图的原始文件（只有截图/扫描件） | 不贴截图冒充原图：该段不挂 `figures`，在 `analysis.caveat` 写明“图 X 未能取到原图，需对照原文查看” |
+| 图在 PDF 里被拆成多条位图带，或 (a)(b) 被分成两张 | 用 `scripts/figures.py extract` 自动拼回整张（`composed: stitch`）；不要只导出一条带，也不要把 (a)(b) 拆成两个图号登记 |
+| `figures.py` 报 `composed: render` / `unresolved` | `render` 是完整但不是原字节，交付说明里点明；`unresolved` 退出码 3，先人工看图再决定挂不挂 |
 | 图多导致 HTML 过大（内联超过 ~12 MB） | 改用 `--figure-mode link`，原图原样复制到 `figures/` 并相对引用，交付时提醒两件一起带走 |
 
 任何降级都必须显式写在交付里；不允许默默少交一份就进入用户问答。
@@ -401,6 +411,7 @@ python "<skill_dir>/scripts/check.py" --data "<论文短名>/data.json" --source
 | 先做网页再深读 | 顺序固定：先深读定证据与位置，再据同一套位置生成网页，避免两套说法互相矛盾。 |
 | 网页里的译文或原文被改写 | `en` 必须逐字照录、`zh` 必须逐句对应；以 `source.txt` 为唯一基准，`check.py` 0 error 才算完成。 |
 | 图被裁剪、压缩或叠字 | 用原图原文件，靠页面放大看细节；`sha256` 会抓改图。 |
+| 一张图被拦腰切成两半，或 (a)(b) 拆成两个图号、两段图注 | 一个图号 = 一张完整图 = 一条完整图注：用 `figures.py` 把分带拼回整张，`caption` 写整条；`check.py` 的 `figure-band` / `figure-split` / `figure-panel-label` / `figure-caption-truncated` 会拦。 |
 | 用常识回答“本文为什么” | 先给论文位置与证据分层；泛化知识仅作补充。 |
 | Agent 问答一次抛出很多问题 | 每轮只问一题，等待回答后纠错再推进。 |
 | 把作者机制解释写成已证实事实 | 标为作者解释，并说明缺失验证或替代解释。 |
@@ -442,6 +453,7 @@ paper-tutor/
 | `references/07-figures.md` | 何时必须挂图、原图从哪取、字节不变的边界、灯箱与体积权衡 |
 | `references/acceptance-scenarios.md` | 无真实论文时检查工作流形状的验收场景 |
 | `scripts/extract.py` | 从 txt/md/html/docx/pdf 提取并重建 `source.txt` 段落 |
+| `scripts/figures.py` | PDF 取原图：认出图号、把被排版拆开的分带无损拼回整张、配上整条图注，写出 `figures/_manifest.json` |
 | `scripts/build.py` | `data.json` → 单文件 `3_精读阅读页.html` |
 | `scripts/check.py` | 原文一致性、覆盖度、译文与注释完整性、图片字节校验 |
 | `scripts/validate_output.py` | 两份笔记的结构与证据定位轻量校验 |

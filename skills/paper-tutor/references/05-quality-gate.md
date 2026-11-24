@@ -70,6 +70,11 @@ python "<skill_dir>/scripts/check.py" "<dir>/data.json" --source "<dir>/source.t
 | `figure-unlabeled` | 警告 | 既无 `label` 也无 `caption` | 补图号或一句图注 |
 | `figure-outside` | 警告 | 图在 `data.json` 目录之外 | 复制进 `figures/`，避免交付丢图 |
 | `figure-unused` | 提示 | `figures/` 里有未被任何段落引用的图 | 挂到对应段落，或删掉 |
+| `figure-split` | 错误 | 同一个图号被拆到多个段落/多条 `figures[]` 里登记 | 合并成一条，挂在第一次详细展开的那段 |
+| `figure-panel-label` | 错误 | `label` 写成 `Fig. 5(a)` 这类子图号 | `label` 只写 `Fig. 5`，子图说明写进 `caption` |
+| `figure-band` | 错误 | 文件像素尺寸正好是某张完整图一条分带的尺寸 = 图被拦腰切断 | 用 `scripts/figures.py extract` 重取整张 |
+| `figure-caption-truncated` | 错误 | `caption` 只是 `figures/_manifest.json` 里整条图注的前缀 = (a)(b) 被截掉了 | 抄 manifest 的整条 `caption` |
+| `figure-label-mismatch` | 警告 | `label` 的图号与 `caption` 开头的图号不一致 | 核对图注归属，改对图号 |
 
 ## 四、判定阈值（都在 `check.py` 里，改了要同步本文）
 

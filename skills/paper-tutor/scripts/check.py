@@ -517,6 +517,133 @@ def check_figures(
     return total, verified
 
 
+FIGURE_NO_RE = re.compile(r"^\s*(?:fig(?:ure)?s?\s*\.?\s*|图\s*)(\d+)", re.IGNORECASE)
+PANEL_LABEL_RE = re.compile(r"[（(]\s*[a-z]\s*[)）]", re.IGNORECASE)
+
+
+def manifest_figures(base: Path) -> dict[str, dict]:
+    """Figure entries of figures/_manifest.json (written by scripts/figures.py)."""
+    path = base / "figures" / "_manifest.json"
+    if not path.is_file():
+        return {}
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return {}
+    entries: dict[str, dict] = {}
+    for figure in raw.get("figures") or []:
+        if not isinstance(figure, dict):
+            continue
+        number = str(figure.get("number") or "")
+        if number:
+            entries[number] = figure
+    return entries
+
+
+def figure_number(text: str) -> str:
+    match = FIGURE_NO_RE.match(text or "")
+    return match.group(1) if match else ""
+
+
+def figure_pixels(base: Path, fig: dict) -> tuple[int, int] | None:
+    raw_path = Path(str(fig.get("path") or ""))
+    path = raw_path if raw_path.is_absolute() else (base / raw_path)
+    try:
+        raw = path.read_bytes()
+    except OSError:
+        return None
+    return common.image_size(raw)
+
+
+def check_figure_integrity(data: dict, base_dir: Path | None, findings: list[Finding]) -> None:
+    """One figure number = one complete image = one complete caption.
+
+    A two-column PDF often stores a single figure as several bitmap bands. Export
+    one band and the figure arrives cut in half, with its caption split into
+    "Fig. 5(a) ..." and "Fig. 5(b) ...". Both are errors. The complete captions and
+    the band sizes come from figures/_manifest.json (scripts/figures.py extract).
+    """
+    base = base_dir or Path(".")
+    manifest = manifest_figures(base)
+    seen: dict[str, str] = {}
+
+    for para in data["paragraphs"]:
+        pid = para.get("id", "?")
+        for fig in common.figures_of(para):
+            label = common.norm_ws(str(fig.get("label") or ""))
+            caption = common.norm_ws(str(fig.get("caption") or ""))
+
+            if PANEL_LABEL_RE.search(label):
+                findings.append(
+                    Finding(
+                        "error",
+                        "figure-panel-label",
+                        f"{pid} 的图号写成了 {label}：子图号不该出现在 label 里",
+                        pid,
+                        "label 只写 Fig. 5；把 (a)(b) 各画了什么放回 caption，图只挂一张完整的。",
+                    )
+                )
+
+            label_no = figure_number(label)
+            caption_no = figure_number(caption)
+            if label_no and caption_no and label_no != caption_no:
+                findings.append(
+                    Finding(
+                        "warn",
+                        "figure-label-mismatch",
+                        f"{pid} 的图号 {label} 与图注开头的 Fig. {caption_no} 对不上",
+                        pid,
+                        "核对这张图到底配哪条图注；两栏排版里题注归属最容易错位一格。",
+                    )
+                )
+
+            number = label_no or caption_no
+            if number:
+                if number in seen:
+                    findings.append(
+                        Finding(
+                            "error",
+                            "figure-split",
+                            f"图 {number} 在 {seen[number]} 和 {pid} 各登记了一次",
+                            pid,
+                            "一个图号只登记一条 figures[]：合并到第一次详细展开它的那一段。",
+                        )
+                    )
+                else:
+                    seen[number] = pid
+
+            entry = manifest.get(number) if number else None
+            if not entry:
+                continue
+
+            full = common.norm_ws(str(entry.get("caption") or ""))
+            if full and caption and len(caption) + 15 < len(full) and full.startswith(caption):
+                findings.append(
+                    Finding(
+                        "error",
+                        "figure-caption-truncated",
+                        f"{pid} 的 {label or '图 ' + number} 图注只是整条图注的前缀，后半截丢了：{caption}",
+                        pid,
+                        f"整条图注是：{full}",
+                    )
+                )
+
+            size = figure_pixels(base, fig)
+            if size:
+                bands = [tuple(band.get("px") or ()) for band in entry.get("bands") or []]
+                if len(bands) > 1 and size in bands:
+                    findings.append(
+                        Finding(
+                            "error",
+                            "figure-band",
+                            f"{pid} 的 {label or '图 ' + number} 只是整张图的一条分带：{size[0]}x{size[1]} px",
+                            pid,
+                            f"整张图是 {entry.get('px')} px（由 {len(bands)} 条分带拼成）；"
+                            "用 figures.py extract 重取整张，不要把图拦腰切断。",
+                        )
+                    )
+
+
 def check_sections(data: dict, source_norm: str, findings: list[Finding]) -> None:
     for section in data["sections"]:
         title = common.norm_ws(section["title_en"])
@@ -551,6 +678,7 @@ def run(
     stats["figures"], stats["figures_verified"] = check_figures(
         data, base_dir, findings, write_hashes, data_path
     )
+    check_figure_integrity(data, base_dir, findings)
 
     for para in data["paragraphs"]:
         if para.get("kind") != "reference":

@@ -79,7 +79,7 @@
 | 字段 | 类型 | 必填 | 说明 |
 |---|---|---|---|
 | `path` | string | 是 | 相对 `data.json` 所在目录的路径（推荐放 `figures/`），扩展名必须是 `.png/.jpg/.jpeg/.gif/.webp/.bmp/.avif/.svg` |
-| `label` | string | 否 | 面上显示的图号，如 `Figure 3`、`图 3`；省略时显示 `图 N` |
+| `label` | string | 否 | 面上显示的图号，如 `Figure 3`、`图 3`；省略时显示 `图 N`。**只写图号**，不写 `Fig. 5(a)` 这类子图号 |
 | `caption` | string | 否 | 图注。原文有图注时照录；也可写一句中文说明，但不要与 `kind: "caption"` 的段落重复 |
 | `alt` | string | 否 | 读屏与图未加载时的替代文字，一句话说清这张图画了什么 |
 | `source` | string | 否 | 图从哪来：`论文 Figure 3，取自 arXiv HTML`、`用户提供的导出图`、`docx 内嵌 media/image3.png` |
@@ -87,6 +87,8 @@
 | `note` | string | 否 | 这张图与文字的关系提示（如"图中虚线是本文方法"） |
 
 约束：`sha256` 一旦记录，图片字节再变就是错误（`figure-hash`）——这正是"不改变图片任何信息"的机器保证。`label` 与 `caption` 全缺会给 `figure-unlabeled` 警告。
+
+**一条 `figures[]` = 一张完整图 + 一条完整图注。** 图在 PDF 里被排版拆成多条位图带时（(a)(b) 两个子图各占一条），要先拼回整张再登记；`caption` 写整条（含 (a)(b)），不要拆成 `Fig. 5(a) …` / `Fig. 5(b) …` 两条。`scripts/figures.py extract` 会生成 `figures/_manifest.json`（每张图的整条图注与各分带像素尺寸），`check.py` 用它核对：文件尺寸等于某条分带 → `figure-band`；`caption` 只是整条图注的前缀 → `figure-caption-truncated`；`label` 带 `(a)`/`(b)` → `figure-panel-label`；同一图号登记了两条 → `figure-split`。
 
 图不参与"原文逐字"校验：`source.txt` 是文字基准，图是伴随材料。
 
@@ -125,6 +127,7 @@
 - `argument_map[].paras` 引用的编号必须存在。
 - `figures[].path` 非空、扩展名在允许列表内；`sha256` 若存在必须是 64 位小写十六进制。
 - 图片文件本身：存在、能识别出图片格式、与记录的 `sha256` 一致（三者分别对应 `figure-missing` / `figure-type` / `figure-hash`）。
+- 图片完整性：与 `figures/_manifest.json` 比对，分带文件、(a)(b) 拆分、截断图注分别报 `figure-band` / `figure-panel-label` / `figure-split` / `figure-caption-truncated`；`label` 与 `caption` 图号不一致给 `figure-label-mismatch` 警告。
 
 ## 写作约定
 

@@ -318,6 +318,58 @@ def sniff_image_mime(raw: bytes, path: Path) -> str:
     return MIME_BY_EXT.get(path.suffix.lower(), "application/octet-stream")
 
 
+def image_size(raw: bytes) -> tuple[int, int] | None:
+    """Pixel size read from the container header, without decoding the image.
+
+    Stdlib only: check.py must not need Pillow just to notice that a figure file
+    is one band of a stitched figure. Returns None for formats it cannot parse.
+    """
+    if raw.startswith(b"\x89PNG\r\n\x1a\n") and len(raw) >= 24 and raw[12:16] == b"IHDR":
+        width = int.from_bytes(raw[16:20], "big")
+        height = int.from_bytes(raw[20:24], "big")
+        return width, height
+    if raw.startswith(b"\xff\xd8"):
+        index = 2
+        while index + 9 < len(raw):
+            if raw[index] != 0xFF:
+                index += 1
+                continue
+            marker = raw[index + 1]
+            if marker in (0xD8, 0x01) or 0xD0 <= marker <= 0xD7:
+                index += 2
+                continue
+            length = int.from_bytes(raw[index + 2 : index + 4], "big")
+            if marker in (
+                0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7,
+                0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF,
+            ):
+                height = int.from_bytes(raw[index + 5 : index + 7], "big")
+                width = int.from_bytes(raw[index + 7 : index + 9], "big")
+                return width, height
+            index += 2 + max(2, length)
+        return None
+    if raw.startswith((b"GIF87a", b"GIF89a")) and len(raw) >= 10:
+        width = int.from_bytes(raw[6:8], "little")
+        height = int.from_bytes(raw[8:10], "little")
+        return width, height
+    if raw[:4] == b"RIFF" and raw[8:12] == b"WEBP" and len(raw) >= 30:
+        chunk = raw[12:16]
+        if chunk == b"VP8X":
+            width = 1 + int.from_bytes(raw[24:27], "little")
+            height = 1 + int.from_bytes(raw[27:30], "little")
+            return width, height
+        if chunk == b"VP8 ":
+            height = int.from_bytes(raw[26:28], "little") & 0x3FFF
+            width = int.from_bytes(raw[28:30], "little") & 0x3FFF
+            return width, height
+        return None
+    if raw.startswith(b"BM") and len(raw) >= 26:
+        width = int.from_bytes(raw[18:22], "little", signed=True)
+        height = abs(int.from_bytes(raw[22:26], "little", signed=True))
+        return width, height
+    return None
+
+
 def figures_of(para: dict) -> list[dict]:
     """Figures attached to a paragraph, tolerating a missing key."""
     figures = para.get("figures")
