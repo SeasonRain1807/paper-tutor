@@ -29,12 +29,10 @@ build/
 dist/
 node_modules/
 
-# ===== DSH 本地运行时数据（不属于 skill 本体）=====
-.dsh/sessions/
-.dsh/storages/
-.dsh/cache/
-.dsh/logs/
-.dsh/tmp/
+# ===== DSH 项目级运行时目录（整目录忽略）=====
+# 含 install.ps1 建的 .dsh/skills/paper-tutor 链接、会话、缓存、插件与本地配置。
+# 仓库里不放任何 DSH 本地状态；将来确有项目级配置要入库时，用 !.dsh/config.json 单独放行。
+.dsh/
 
 # ===== paper-tutor 运行产物与本地依赖（不进仓库）=====
 notes/
@@ -46,9 +44,19 @@ rawfigs/
 *.docx
 *.jp2
 demo.html
+# 论文与补充材料的其它常见格式，与 *.pdf / *.docx 同策略：原文留在本地，不进仓库
+*.doc
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+# 发版包与补充材料压缩包
+*.zip
+*.7z
+*.rar
 
-# ===== 各宿主的 skill 安装位（install.ps1 / install.sh 生成的链接或副本）=====
-.dsh/skills/paper-tutor/
+# ===== 其余宿主的 skill 安装位（install.ps1 / install.sh 生成的链接或副本）=====
+# .dsh 已在上面整目录忽略，这里只剩 Claude Code / Codex / 通用 Agent Skills 三处。
 .claude/skills/paper-tutor/
 .codex/skills/paper-tutor/
 .agents/skills/paper-tutor/
