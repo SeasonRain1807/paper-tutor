@@ -55,7 +55,7 @@
 | `section` | string | 是 | 必须是 `sections[].id` 之一 |
 | `kind` | string | 是 | `body` / `abstract` / `caption` / `equation` / `footnote` / `quote` / `reference` |
 | `label` | string | 否 | 中文角色标签，2–8 字，如 `研究缺口`、`方法概述`、`实验设置` |
-| `en` | string | 是 | 原文，逐字；仅允许把排版换行合并为空格 |
+| `en` | string | 是 | 原文，逐字；仅允许把排版换行合并为空格。**不要手抄**：先写占位符 `"@@段号"`，再用 `scripts/autofill.py` 填回（见文末） |
 | `zh` | string | 是 | 逐句中文翻译 |
 | `preserve_breaks` | bool | 否 | 为 `true` 时保留 `en` 中的换行（公式、代码、诗歌），默认合并为空格 |
 | `analysis` | object | 是 | 见下 |
@@ -135,3 +135,17 @@
 - 数组字段即使只有一项也用数组。
 - 不要塞入 HTML 标签；页面会转义。需要强调时在注释里用中文标点组织，不要用 `<b>`。
 - 数学符号原样保留（`α`、`ℝ`、`O(n²)`），不要转成 `alpha` 之类的拼写。
+
+## 用 autofill 填回 en
+
+`en` 是整份数据里最大的一块重复输出（示例里占全部自撰字符的 64%）。写的时候全部用占位符，最后一次性填回：
+
+```powershell
+python "<skill_dir>/scripts/autofill.py" --source "<dir>/source.txt" --list   # 打印 source.txt 的段落清单（不用 data.json）
+python "<skill_dir>/scripts/autofill.py" --data "<dir>/data.json" --source "<dir>/source.txt"          # 把 "@@7" 换成第 7 块的逐字原文
+```
+
+- 段号是 `source.txt` **按空行切出来的块序号**（1 起），与 `check.py` 的切法完全一致；标题、作者、参考文献这些块也有编号，只是不会被引用。
+- 占位符必须整格匹配 `@@数字`；已经写了真实原文的段落会被跳过，所以可以边写边填。
+- 段号越界、两段抢同一个段号、`en` 留空，都会整批拒绝并打印原因，不会写出半成品。
+- 填完仍要跑 `check.py`：逐字是否命中以它为准。

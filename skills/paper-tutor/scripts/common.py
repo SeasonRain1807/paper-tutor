@@ -28,9 +28,9 @@ KIND_LABEL = {
 REQUIRED_META = ("title_en", "title_zh", "one_line", "argument_map", "source_note")
 REQUIRED_NOTE_FIELDS = ("summary", "function", "position")
 
-# Figures embedded in a paragraph. `path` is required; everything else is
-# optional metadata that must never be baked into the image itself.
-FIGURE_KEYS = ("path", "label", "caption", "alt", "sha256", "source", "note")
+# Figures embedded in a paragraph: `path` is required; label / caption / alt /
+# sha256 / source / note are optional metadata that must never be baked into the
+# image itself.
 
 IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".avif", ".svg")
 

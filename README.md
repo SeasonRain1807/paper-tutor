@@ -62,7 +62,9 @@ paper-tutor 把「读一篇论文」拆成四步，全部由这一个 Skill 完�
         ├── references/                  # 12 份细则：数据契约、翻译规则、注释量表、质量门、图片规则…
         ├── scripts/
         │   ├── extract.py               # 论文 → source.txt（逐字基准）
+        │   ├── deps.py                  # 可选依赖体检：缺 pypdf / PyMuPDF 时装一次（装进当前解释器）
         │   ├── check.py                 # data.json 校验：结构 / 逐字 / 覆盖 / 图片字节
+        │   ├── autofill.py              # 把 data.json 里的 "@@段号" 占位符填回逐字原文
         │   ├── build.py                 # data.json → 3_精读阅读页.html（单文件离线）
         │   ├── validate_output.py       # 交付前结构检查：1_/2_ 两份笔记
         │   └── common.py                # 公共工具：规范化、哈希、数据加载
@@ -221,11 +223,13 @@ ln -s "$PWD/skills/paper-tutor" ~/.claude/skills/paper-tutor   # 或 cp -R
 
 - Python 3.10+，脚本只用标准库；缺 `python` 时用 `python3` 或 `py -3`。
 - `extract.py` 处理 PDF / DOCX / HTML 时分别需要 `pypdf`（或系统 `pdftotext`）/ `python-docx` / `lxml`，缺了会在报错信息里点名，并按 `references/01-source-extraction.md` 的降级方案处理。
+- PDF 相关的两件依赖（`pypdf` 读文本层、`PyMuPDF` + Pillow 取原图）**装一次就够**：`python "<skill_dir>/scripts/deps.py" --install` 会装进当前解释器的 site-packages，之后所有会话、所有论文目录都能用。不要 `pip install --target .pylibs`——那样每换一个论文目录就要重新下一遍约 20 MB。
 - 命令统一写成 `python "<skill_dir>/scripts/xxx.py"`：`<skill_dir>` 是这个 skill 的目录。脚本按自身位置加载 `common.py` 与 `templates/`，所以在任意工作目录执行都成立；而交付物路径（`notes/…`、`sci-reading-output/…`）相对**当前项目**解析。
 
 ## 自检
 
 ```bash
+python "<skill_dir>/scripts/deps.py"          # 可选依赖是否齐全（缺就加 --install 装一次）
 python "<skill_dir>/scripts/check.py" --data "<skill_dir>/templates/精读示例/data.json" --source "<skill_dir>/templates/精读示例/source.txt"
 python "<skill_dir>/scripts/build.py" --data "<skill_dir>/templates/精读示例/data.json" -o demo.html
 ```

@@ -1,5 +1,7 @@
 # 页面与交互：`3_精读阅读页.html` 是怎么长出来的
 
+> **维护者文档，执行 paper-tutor 时不需要读这一页。** 生成页面只需要 `data.json` + `build.py`；只有要改 `templates/page/reading.css`、`reading.js` 或 `build.py` 的渲染逻辑时才看。
+
 `build.py` 把 `data.json` 渲染成一页 HTML，再把 `templates/page/reading.css` 与 `templates/page/reading.js` **整段内联**进去。产物是一个独立文件：没有外链、没有网络请求、没有字体下载，`file://` 双击能开，断网能看，发邮件能发。这不是风格偏好，是硬约束——用户常常在离线环境或公司内网里读论文。
 
 改内容只改 `data.json`，然后重新构建。手改 HTML 会在下次构建时被覆盖，而且会绕过 `check.py` 的闸门。

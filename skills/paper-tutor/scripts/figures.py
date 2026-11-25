@@ -68,15 +68,17 @@ CONT_RE = re.compile(r"^\s*(?:\(?[a-z]\)|and\s|\bcontinued\b|,)", re.IGNORECASE)
 
 def load_fitz():
     try:
-        import fitz  # type: ignore
+        import pymupdf as fitz  # type: ignore  # 1.24+ 的正式模块名，避免 fitz 的弃用告警
     except ImportError:
         try:
-            import pymupdf as fitz  # type: ignore
+            import fitz  # type: ignore  # 老版本 PyMuPDF 只有这个名字
         except ImportError:
             common.die(
                 "本机没有可用的 PDF 位图读取器（缺 PyMuPDF）。\n"
-                "安装一次即可：\n"
-                "    pip install pymupdf\n"
+                "装一次即可，装进当前这个解释器（之后所有会话、所有论文目录都不用再装）：\n"
+                '    "' + sys.executable + '" -m pip install "pymupdf>=1.24,<2" pillow\n'
+                "懒一点就先跑 python scripts/deps.py --install，它只装缺的那几个。\n"
+                "不要用 pip install --target .pylibs 之类按目录安装——那样每换一个论文目录都要重新下一遍。\n"
                 "装好后重跑本脚本；不要退回截图，也不要凭印象拼图。"
             )
     return fitz
@@ -88,7 +90,8 @@ def load_pil():
     except ImportError:
         common.die(
             "本机没有 Pillow，无法把被 PDF 拆开的图块拼回一张图。\n"
-            "安装一次即可：\n    pip install pillow"
+            "装一次即可，装进当前这个解释器：\n"
+            '    "' + sys.executable + '" -m pip install pillow'
         )
     return Image
 
@@ -226,18 +229,33 @@ def decode_image(doc, fitz, Image, xref: int):
         return image.convert("RGB"), raw, ext
 
 
-def assemble(group: list[dict], doc, page, fitz, Image, allow_render: bool) -> dict:
+def assemble(
+    group: list[dict], doc, page, fitz, Image, allow_render: bool, decode: bool = True
+) -> dict:
     """Reassemble one picture from its tiles.
 
     kind is "single" when the picture already was one image (its bytes are used
     as they are), "stitch" when tiles were pasted back together pixel for pixel,
     "render" when the tiling could not be undone and the page region was drawn
     instead, "unresolved" when even that was not allowed.
+
+    decode=False skips decoding and pasting the pixels (probe only reports): the
+    像素尺寸 then comes from the PDF's own image dict, so kind / bands / notes /
+    size are the same, but no image is built and no memory is spent on pixels.
     """
-    decoded = []
-    for item in group:
-        image, raw, ext = decode_image(doc, fitz, Image, item["xref"])
-        decoded.append((item, image, raw, ext))
+    if decode:
+        decoded = []
+        for item in group:
+            image, raw, ext = decode_image(doc, fitz, Image, item["xref"])
+            decoded.append((item, image, raw, ext))
+    else:
+        decoded = [(item, None, None, "png") for item in group]
+
+    def cell_size(cell) -> tuple[int, int]:
+        image = cell[1]
+        if image is not None:
+            return image.width, image.height
+        return int(cell[0]["px"][0]), int(cell[0]["px"][1])
 
     if len(group) == 1:
         item, image, raw, ext = decoded[0]
@@ -249,6 +267,7 @@ def assemble(group: list[dict], doc, page, fitz, Image, allow_render: bool) -> d
             "bands": [{"xref": item["xref"], "px": item["px"], "rect": item["rect"], "offset": [0, 0]}],
             "note": "",
             "pixmap": None,
+            "size": list(cell_size(decoded[0])),
         }
 
     # Tiles that share a visual line form a row; rows are stacked top to bottom.
@@ -268,7 +287,7 @@ def assemble(group: list[dict], doc, page, fitz, Image, allow_render: bool) -> d
     y = 0
     consistent = True
     for row in rows:
-        heights = {cell[1].height for cell in row}
+        heights = {cell_size(cell)[1] for cell in row}
         if len(heights) != 1:
             consistent = False
             notes.append("同一行的图块像素高度不一致")
@@ -277,16 +296,20 @@ def assemble(group: list[dict], doc, page, fitz, Image, allow_render: bool) -> d
         x = 0
         for cell in row:
             placements.append((cell, x, y))
-            x += cell[1].width
+            x += cell_size(cell)[0]
         y += row_height
-    widths = {sum(cell[1].width for cell in row) for row in rows}
+    widths = {sum(cell_size(cell)[0] for cell in row) for row in rows}
     if consistent and len(widths) == 1:
-        canvas = Image.new("RGB", (widths.pop(), y), "white")
-        for cell, x, offset_y in placements:
-            canvas.paste(cell[1], (x, offset_y))
+        canvas_w = widths.pop()
+        canvas_h = y
+        canvas = None
+        if decode:
+            canvas = Image.new("RGB", (canvas_w, canvas_h), "white")
+            for cell, x, offset_y in placements:
+                canvas.paste(cell[1], (x, offset_y))
         rect = bbox_of(group)
-        scale_x = canvas.width / max(1e-6, rect[2] - rect[0])
-        scale_y = canvas.height / max(1e-6, rect[3] - rect[1])
+        scale_x = canvas_w / max(1e-6, rect[2] - rect[0])
+        scale_y = canvas_h / max(1e-6, rect[3] - rect[1])
         drift = abs(scale_x - scale_y) / max(scale_x, scale_y)
         if drift > 0.04:
             notes.append("拼接后横竖比例与页面几何相差 %.1f%%，请目视确认" % (drift * 100))
@@ -307,6 +330,7 @@ def assemble(group: list[dict], doc, page, fitz, Image, allow_render: bool) -> d
             "bands": bands,
             "note": "；".join(notes),
             "pixmap": None,
+            "size": [canvas_w, canvas_h],
         }
 
     # -- tiling that cannot be undone pixel by pixel ------------------------- #
@@ -320,6 +344,7 @@ def assemble(group: list[dict], doc, page, fitz, Image, allow_render: bool) -> d
             "bands": [{"xref": item["xref"], "px": item["px"], "rect": item["rect"]} for item in group],
             "note": "图块尺寸不成行/不成列，无法逐像素拼接；加 --allow-render 让脚本按页内区域渲染一次",
             "pixmap": None,
+            "size": [0, 0],
         }
     scales = [item["px"][0] / max(1e-6, item["rect"][2] - item["rect"][0]) for item in group]
     zoom = max(scales) if scales else 4.0
@@ -332,6 +357,7 @@ def assemble(group: list[dict], doc, page, fitz, Image, allow_render: bool) -> d
         "bands": [{"xref": item["xref"], "px": item["px"], "rect": item["rect"]} for item in group],
         "note": "分带无法无损拼接，按页内区域渲染（完整，但不是原字节）",
         "pixmap": pixmap,
+        "size": [pixmap.width, pixmap.height],
     }
 
 
@@ -520,8 +546,15 @@ def parse_pages(spec: str | None, total: int) -> list[int]:
     return [index - 1 for index in sorted(wanted) if 1 <= index <= total]
 
 
-def collect(doc, fitz, Image, pages: list[int], tol: float, min_area: float, allow_render: bool):
-    """Read the document and return (pictures, skipped, warnings)."""
+def collect(
+    doc, fitz, Image, pages: list[int], tol: float, min_area: float, allow_render: bool, decode: bool = True
+):
+    """Read the document and return (pictures, skipped, warnings).
+
+    decode=False skips decoding the image pixels: right for "probe", which only
+    reports geometry and captions and would otherwise build every picture only
+    to throw it away.
+    """
     pictures: list[dict] = []
     skipped: list[dict] = []
     warnings: list[str] = []
@@ -537,7 +570,7 @@ def collect(doc, fitz, Image, pages: list[int], tol: float, min_area: float, all
         assigned = assign_captions(rects, captions)
         for order, group in enumerate(groups):
             caption = assigned.get(order)
-            result = assemble(group, doc, page, fitz, Image, allow_render)
+            result = assemble(group, doc, page, fitz, Image, allow_render, decode=decode)
             pictures.append(
                 {
                     "page": index + 1,
@@ -589,12 +622,7 @@ def target_name(number: str | None, page: int, seen: set[str], ext: str) -> str:
 
 def describe(picture: dict) -> str:
     rect = picture["rect"]
-    if picture["image"] is not None:
-        width_px, height_px = picture["image"].size
-    elif picture["pixmap"] is not None:
-        width_px, height_px = picture["pixmap"].width, picture["pixmap"].height
-    else:
-        width_px, height_px = 0, 0
+    width_px, height_px = picture.get("size") or (0, 0)
     dpi = (width_px / max(1e-6, rect[2] - rect[0]) * 72) if width_px else 0.0
     return "第 %d 页 · 区域 (%s)-(%s) pt · %dx%d px · 约 %.0f dpi" % (
         picture["page"], rect[0], rect[1], width_px, height_px, dpi,
@@ -609,7 +637,7 @@ def run_probe(args) -> int:
         common.die("找不到 PDF：%s" % path)
     doc = fitz.open(str(path))
     pages = parse_pages(args.pages, doc.page_count)
-    pictures, skipped, warnings = collect(doc, fitz, Image, pages, args.tol, args.min_area, False)
+    pictures, skipped, warnings = collect(doc, fitz, Image, pages, args.tol, args.min_area, False, decode=False)
 
     payload = {
         "pdf": str(path),
@@ -734,14 +762,15 @@ def run_extract(args) -> int:
         name = target_name(number, picture["page"], written, picture["ext"])
         target = out_dir / name
         if kind == "single":
-            target.write_bytes(picture["raw"])
+            raw = picture["raw"]
         elif kind == "render":
-            picture["pixmap"].save(str(target))
+            raw = picture["pixmap"].tobytes("png")
         else:
-            picture["image"].save(str(target), format="PNG", optimize=True)
-        raw = target.read_bytes()
-        with Image.open(io.BytesIO(raw)) as probe:
-            width_px, height_px = probe.size
+            buffer = io.BytesIO()
+            picture["image"].save(buffer, format="PNG", optimize=True)
+            raw = buffer.getvalue()
+        target.write_bytes(raw)
+        width_px, height_px = picture["size"]
         entry.update(
             {
                 "file": name,
@@ -811,7 +840,13 @@ def main() -> int:
     extract = sub.add_parser("extract", help="一张图一个文件，并写 figures/_manifest.json")
     shared(extract)
     extract.add_argument("--out", default="figures", help="输出目录（默认 figures/）")
-    extract.add_argument("--manifest", help="清单路径（默认 <out>/_manifest.json）")
+    extract.add_argument(
+        "--manifest",
+        nargs="?",
+        default=None,
+        const=None,
+        help="清单路径（默认 <out>/_manifest.json；不跟路径就等于用默认值）",
+    )
     extract.add_argument(
         "--allow-render",
         action="store_true",

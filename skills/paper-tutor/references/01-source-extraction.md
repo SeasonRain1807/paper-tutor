@@ -10,7 +10,7 @@
 | HTML（已下载） | `python "<skill_dir>/scripts/extract.py" paper.html -o out/source.txt` | 用 lxml 取 `<article>/<main>` 下的 `p/li/h1-h3/figcaption/blockquote` |
 | 网页 URL | 先下载再提取：`python "<skill_dir>/scripts/extract.py" --url "https://arxiv.org/abs/2401.00001" -o out/source.txt` | 需要网络；arXiv 的 abs 页只有摘要，正文要取 HTML 全文页 |
 | Word | `python "<skill_dir>/scripts/extract.py" paper.docx -o out/source.txt` | 依赖 `python-docx` |
-| PDF | `python "<skill_dir>/scripts/extract.py" paper.pdf -o out/source.txt` | 依赖 `pypdf` 或 `pdftotext`；没有就按下面的降级处理 |
+| PDF | `python "<skill_dir>/scripts/extract.py" paper.pdf -o out/source.txt` | 依赖 `pypdf` 或 `pdftotext`；缺就 `python "<skill_dir>/scripts/deps.py" --install` 装一次（不要 `--target` 到输出目录），再没有就按下面的降级处理 |
 
 ## HTML 提取要点
 

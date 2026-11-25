@@ -267,6 +267,9 @@ def extract_pdf(path: Path) -> list[tuple[str, bool, int]]:
             raise SystemExit(
                 "本机没有可用的 PDF 文本层提取器（缺 pypdf 模块，也缺 pdftotext）。\n"
                 "可选做法：\n"
+                "  0) 装一次 pypdf，装进当前这个解释器（之后所有会话都不用再装）：\n"
+                '     "' + sys.executable + '" -m pip install "pypdf>=5,<7"\n'
+                "     或 python scripts/deps.py --install（只装缺的）。不要 --target 到论文目录里。\n"
                 "  1) 让用户提供该论文的 HTML / arXiv abs 页 / 出版社网页链接；\n"
                 "  2) 让用户提供 Word 或纯文本版本；\n"
                 "  3) 用户手动复制正文存为 .txt；\n"

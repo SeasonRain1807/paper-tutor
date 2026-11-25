@@ -93,8 +93,8 @@ def render_caveat(caveat) -> str:
     return f'<div class="note-block caveat"><h4>存疑 / 待核</h4><p>{esc(caveat)}</p></div>'
 
 
-def figure_source(fig: dict, ctx: dict, pid: str, no: int) -> tuple[str, str, str]:
-    """Return (src, mime_or_empty, sha256) for one figure.
+def figure_source(fig: dict, ctx: dict, pid: str, no: int) -> tuple[str, str]:
+    """Return (src, sha256) for one figure.
 
     The image bytes are never decoded, resized, cropped or re-compressed:
     `inline` mode base64-encodes the file as-is, `link` mode copies the file
@@ -133,12 +133,12 @@ def figure_source(fig: dict, ctx: dict, pid: str, no: int) -> tuple[str, str, st
         if target.exists() and common.sha256_file(target) != sha:
             raise common.DataError(f"{pid} 的图片复制后字节不一致：{target}")
         ctx.setdefault("copied", []).append(target)
-        return f"figures/{name}", common.sniff_image_mime(raw, path), sha
+        return f"figures/{name}", sha
 
     mime = common.sniff_image_mime(raw, path)
     encoded = base64.b64encode(raw).decode("ascii")
     ctx["inline_bytes"] = ctx.get("inline_bytes", 0) + len(raw)
-    return f"data:{mime};base64,{encoded}", mime, sha
+    return f"data:{mime};base64,{encoded}", sha
 
 
 def render_figures(para: dict, ctx: dict) -> str:
@@ -148,7 +148,7 @@ def render_figures(para: dict, ctx: dict) -> str:
     pid = para["id"]
     items = []
     for no, fig in enumerate(figures, 1):
-        src, mime, sha = figure_source(fig, ctx, pid, no)
+        src, sha = figure_source(fig, ctx, pid, no)
         label = common.norm_ws(str(fig.get("label") or f"图 {no}"))
         caption = common.norm_ws(str(fig.get("caption") or ""))
         alt = common.norm_ws(str(fig.get("alt") or caption or label))

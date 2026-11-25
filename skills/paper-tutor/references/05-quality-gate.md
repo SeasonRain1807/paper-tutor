@@ -121,6 +121,7 @@ python "<skill_dir>/scripts/check.py" "<dir>/data.json" --source "<dir>/source.t
 ## 七、改完以后的动作链
 
 ```bash
+python "<skill_dir>/scripts/autofill.py" --data "<dir>/data.json" --source "<dir>/source.txt"   # 把 "@@段号" 填回逐字原文
 python "<skill_dir>/scripts/check.py"  "<dir>/data.json" --source "<dir>/source.txt" --write-figure-hashes  # 仅首次登记图
 python "<skill_dir>/scripts/check.py"  "<dir>/data.json" --source "<dir>/source.txt"   # 0 error
 python "<skill_dir>/scripts/build.py"  "<dir>/data.json" -o "<dir>/3_精读阅读页.html"

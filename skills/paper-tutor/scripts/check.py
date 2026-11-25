@@ -30,8 +30,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import common  # noqa: E402
 
-CJK_ONLY_RE = re.compile(r"[\u4e00-\u9fff]")
 LATIN_ONLY_RE = re.compile(r"^[A-Za-z0-9\s\W]+$")
+PLACEHOLDER_RE = re.compile(r"^@@\s*\d+\s*$")  # en 还没被 autofill.py 填回
 
 
 class Finding:
@@ -126,6 +126,17 @@ def check_paragraph_against_source(
     pid = para["id"]
     en = common.norm_ws(para["en"])
     if not en:
+        return 0
+    if PLACEHOLDER_RE.match(en):
+        findings.append(
+            Finding(
+                "warn" if transcribed else "error",
+                "verbatim",
+                f"{pid} 的 en 还是占位符 {en}：先跑 scripts/autofill.py 把逐字原文填回去",
+                pid,
+                'autofill.py --data <data.json> --source <source.txt> 会把所有 "@@段号" 换成 source.txt 的原文。',
+            )
+        )
         return 0
     block_index, offset = locate(blocks_norm, source_norm, en)
     if block_index != -1:
@@ -384,6 +395,7 @@ def check_figures(
     findings: list[Finding],
     write_hashes: bool = False,
     data_path: Path | None = None,
+    sizes: dict[str, tuple[int, int] | None] | None = None,
 ) -> tuple[int, int]:
     """Audit the `figures` attachments: exist, are images, and are byte-identical.
 
@@ -423,6 +435,8 @@ def check_figures(
 
             recorded.add(path.resolve())
             raw = path.read_bytes()
+            if sizes is not None:
+                sizes[str(path.resolve())] = common.image_size(raw)
             mime = common.sniff_image_mime(raw, path)
             if mime == "application/octet-stream":
                 findings.append(
@@ -545,9 +559,14 @@ def figure_number(text: str) -> str:
     return match.group(1) if match else ""
 
 
-def figure_pixels(base: Path, fig: dict) -> tuple[int, int] | None:
+def figure_pixels(
+    base: Path, fig: dict, sizes: dict[str, tuple[int, int] | None] | None = None
+) -> tuple[int, int] | None:
     raw_path = Path(str(fig.get("path") or ""))
     path = raw_path if raw_path.is_absolute() else (base / raw_path)
+    key = str(path.resolve())
+    if sizes is not None and key in sizes:
+        return sizes[key]
     try:
         raw = path.read_bytes()
     except OSError:
@@ -555,7 +574,12 @@ def figure_pixels(base: Path, fig: dict) -> tuple[int, int] | None:
     return common.image_size(raw)
 
 
-def check_figure_integrity(data: dict, base_dir: Path | None, findings: list[Finding]) -> None:
+def check_figure_integrity(
+    data: dict,
+    base_dir: Path | None,
+    findings: list[Finding],
+    sizes: dict[str, tuple[int, int] | None] | None = None,
+) -> None:
     """One figure number = one complete image = one complete caption.
 
     A two-column PDF often stores a single figure as several bitmap bands. Export
@@ -628,7 +652,7 @@ def check_figure_integrity(data: dict, base_dir: Path | None, findings: list[Fin
                     )
                 )
 
-            size = figure_pixels(base, fig)
+            size = figure_pixels(base, fig, sizes)
             if size:
                 bands = [tuple(band.get("px") or ()) for band in entry.get("bands") or []]
                 if len(bands) > 1 and size in bands:
@@ -675,10 +699,13 @@ def run(
     for error in common.validate(data):
         findings.append(Finding("error", "schema", error))
 
+    # 同一张图只读一次：check_figures 拿到字节后把像素尺寸留在 figure_sizes 里，
+    # check_figure_integrity 直接复用，不再把每个图片文件读第二遍。
+    figure_sizes: dict[str, tuple[int, int] | None] = {}
     stats["figures"], stats["figures_verified"] = check_figures(
-        data, base_dir, findings, write_hashes, data_path
+        data, base_dir, findings, write_hashes, data_path, figure_sizes
     )
-    check_figure_integrity(data, base_dir, findings)
+    check_figure_integrity(data, base_dir, findings, figure_sizes)
 
     for para in data["paragraphs"]:
         if para.get("kind") != "reference":
